@@ -13,26 +13,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
-/*
-	JWT --> JSON Web Token, is a secure and trustworthy standard for token authentication.
-	1. Enter credential
-	2. Security first step/ for enable the security ,   WebSecurityConfig Class
-	3. DataBase Verification need to be done at "SecurityService Class"
-	4. Application create the token and return it , JWTUtil class
-	    Decode the token
-	5. validate the token, SecurityFilter Class
-	6. Send Request with the that generated token
-	7. Get success/failed response according to its authorization
-
- */
 @Component
 public class JWTUtil {
 
     @Value("${security.jwt.secret-key}")
-    private final String secret = "cybertek";
+    private String secret = "cybertek";
 
-
-    // Generating the payload
     public String generateToken(User user){
 
         Map<String,Object> claims = new HashMap<>();
@@ -51,7 +37,7 @@ public class JWTUtil {
                 .setSubject(username)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 *10)) //10 hours token validity
-                .signWith(SignatureAlgorithm.HS256,secret).compact();// Set up signature
+                .signWith(SignatureAlgorithm.HS256,secret).compact();
 
     }
 
@@ -78,11 +64,22 @@ public class JWTUtil {
     }
 
     public Boolean validateToken(String token, UserDetails userDetails){
+//        final String username = extractUsername(token);
+//        return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
+
         final String currentUser = extractAllClaims(token).get("id").toString();
         return (currentUser.equals(userDetails.getUsername()) && !isTokenExpired(token));
     }
 
 
 
-}
 
+
+
+
+
+
+
+
+
+}

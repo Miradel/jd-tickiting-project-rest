@@ -1,5 +1,6 @@
 package com.cybertek.dto;
 
+
 import com.cybertek.enums.Status;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -23,4 +24,3 @@ public class TaskDTO {
     private LocalDate assignedDate;
 
 }
-

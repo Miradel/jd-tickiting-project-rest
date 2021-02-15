@@ -52,6 +52,9 @@ public class SecurityFilter extends OncePerRequestFilter {
             }
         }
         filterChain.doFilter(httpServletRequest, httpServletResponse);
+
+
+
     }
 
     private boolean checkIfUserIsValid(String username) {

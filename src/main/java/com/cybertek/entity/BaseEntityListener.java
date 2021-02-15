@@ -25,8 +25,8 @@ public class BaseEntityListener extends AuditingEntityListener {
 
         if(authentication !=null && !authentication.getName().equals("anonymousUser")){
             long id = Long.parseLong(authentication.getName());
-            baseEntity.insertUserId = id;
-            baseEntity.lastUpdateUserId= id;
+            baseEntity.insertUserId=id;
+            baseEntity.lastUpdateUserId=id;
         }
     }
 
@@ -38,7 +38,7 @@ public class BaseEntityListener extends AuditingEntityListener {
         baseEntity.lastUpdateUserId=1L;
         if(authentication !=null && !authentication.getName().equals("anonymousUser")){
             long id = Long.parseLong(authentication.getName());
-            baseEntity.lastUpdateUserId = id;
+            baseEntity.lastUpdateUserId=id;
         }
 
     }

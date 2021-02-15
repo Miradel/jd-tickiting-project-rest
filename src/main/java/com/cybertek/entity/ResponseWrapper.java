@@ -9,7 +9,6 @@ import org.springframework.http.HttpStatus;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-// IF there is some null value data , this annotation will ignore that field in the json
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ResponseWrapper {
 

@@ -1,6 +1,7 @@
 package com.cybertek.entity;
 
-
+import com.cybertek.dto.ProjectDTO;
+import com.cybertek.dto.UserDTO;
 import com.cybertek.enums.Status;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
