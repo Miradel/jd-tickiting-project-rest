@@ -2,6 +2,7 @@ package com.cybertek.aspect;
 
 
 
+import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.*;
 import org.slf4j.Logger;
@@ -10,15 +11,13 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-import java.util.ArrayList;
-import java.util.List;
-
 
 @Aspect
 @Configuration
+@Slf4j
 public class LoggingAspect {
 
-    Logger log = LoggerFactory.getLogger(LoggingAspect.class);
+    //Logger log = LoggerFactory.getLogger(LoggingAspect.class);
 
     /*
      @Pointcut will declare where we gonna implement,
