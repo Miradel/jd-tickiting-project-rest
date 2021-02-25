@@ -5,19 +5,22 @@ import com.cybertek.dto.TaskDTO;
 import com.cybertek.dto.UserDTO;
 import com.cybertek.entity.User;
 import com.cybertek.exception.TicketingProjectException;
-import com.cybertek.mapper.MapperUtil;
-import com.cybertek.mapper.UserMapper;
+import com.cybertek.util.MapperUtil;
 import com.cybertek.repository.UserRepository;
 import com.cybertek.service.ProjectService;
 import com.cybertek.service.TaskService;
 import com.cybertek.service.UserService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.AuthorityUtils;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.nio.file.AccessDeniedException;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -41,34 +44,48 @@ public class UserServiceImpl implements UserService {
     @Override
     public List<UserDTO> listAllUsers() {
         List<User> list = userRepository.findAll(Sort.by("firstName"));
-        return list.stream().map(obj -> mapperUtil.convert(obj,new UserDTO())).collect(Collectors.toList());
+        return list.stream().map(obj -> mapperUtil.convert(obj, new UserDTO())).collect(Collectors.toList());
     }
 
     @Override
-    public UserDTO findByUserName(String username) {
+    public UserDTO findByUserName(String username) throws AccessDeniedException {
         User user = userRepository.findByUserName(username);
-        return mapperUtil.convert(user,new UserDTO());
+        checkForAuthorities(user);
+        return mapperUtil.convert(user, new UserDTO());
     }
 
     @Override
-    public void save(UserDTO dto) {
+    public UserDTO save(UserDTO dto) throws TicketingProjectException {
 
         User foundUser = userRepository.findByUserName(dto.getUserName());
-        dto.setEnabled(true);
 
-       User obj =  mapperUtil.convert(dto,new User());
-       obj.setPassWord(passwordEncoder.encode(obj.getPassWord()));
-       userRepository.save(obj);
+        if (foundUser != null)
+            throw new TicketingProjectException("User alreday exists");
+
+
+        User user = mapperUtil.convert(dto, new User());
+        user.setPassWord(passwordEncoder.encode(user.getPassWord()));
+        User save = userRepository.save(user);
+        return mapperUtil.convert(save, new UserDTO());
     }
 
     @Override
-    public UserDTO update(UserDTO dto) {
+    public UserDTO update(UserDTO dto) throws TicketingProjectException, AccessDeniedException {
 
         //Find current user
         User user = userRepository.findByUserName(dto.getUserName());
+        if (user == null) {
+            throw new TicketingProjectException("User Does Not Exists");
+        }
         //Map update user dto to entity object
-        User convertedUser = mapperUtil.convert(dto,new User());
+        User convertedUser = mapperUtil.convert(dto, new User());
         convertedUser.setPassWord(passwordEncoder.encode(convertedUser.getPassWord()));
+
+        //TODO
+        if (!user.getEnabled())
+            throw new TicketingProjectException("This user is not confirmed");
+
+        checkForAuthorities(user);
         convertedUser.setEnabled(true);
 
         //set id to the converted object
@@ -83,11 +100,11 @@ public class UserServiceImpl implements UserService {
     public void delete(String username) throws TicketingProjectException {
         User user = userRepository.findByUserName(username);
 
-        if(user == null){
+        if (user == null) {
             throw new TicketingProjectException("User Does Not Exists");
         }
 
-        if(!checkIfUserCanBeDeleted(user)){
+        if (!checkIfUserCanBeDeleted(user)) {
             throw new TicketingProjectException("User can not be deleted. It is linked by a project ot task");
         }
 
@@ -107,13 +124,15 @@ public class UserServiceImpl implements UserService {
     @Override
     public List<UserDTO> listAllByRole(String role) {
         List<User> users = userRepository.findAllByRoleDescriptionIgnoreCase(role);
-        return users.stream().map(obj -> {return mapperUtil.convert(obj,new UserDTO());}).collect(Collectors.toList());
+        return users.stream().map(obj -> {
+            return mapperUtil.convert(obj, new UserDTO());
+        }).collect(Collectors.toList());
     }
 
     @Override
     public Boolean checkIfUserCanBeDeleted(User user) {
 
-        switch(user.getRole().getDescription()){
+        switch (user.getRole().getDescription()) {
             case "Manager":
                 List<ProjectDTO> projectList = projectService.readAllByAssignedManager(user);
                 return projectList.size() == 0;
@@ -122,6 +141,31 @@ public class UserServiceImpl implements UserService {
                 return taskList.size() == 0;
             default:
                 return true;
+        }
+    }
+
+    @Override
+    public UserDTO confirm(User user) {
+        user.setEnabled(true);
+        User confirmedUser = userRepository.save(user);
+        return mapperUtil.convert(confirmedUser, new UserDTO());
+    }
+
+
+    private void checkForAuthorities(User user) throws AccessDeniedException {
+
+        final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication != null && !authentication.getName().equals("anonymousUser")) {
+
+            Set<String> roles = AuthorityUtils.authorityListToSet(authentication.getAuthorities());
+
+            if (!(authentication.getName().equals(user.getId().toString()) || roles.contains("Admin"))) {
+                throw new AccessDeniedException("Access is denied");
+
+            }
+
+
         }
     }
 }

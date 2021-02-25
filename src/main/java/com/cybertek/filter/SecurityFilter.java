@@ -15,6 +15,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.nio.file.AccessDeniedException;
 
 @Service
 public class SecurityFilter extends OncePerRequestFilter {
@@ -26,6 +27,7 @@ public class SecurityFilter extends OncePerRequestFilter {
         this.jwtUtil = jwtUtil;
         this.securityService = securityService;
     }
+
     @Override
     protected void doFilterInternal(HttpServletRequest httpServletRequest,
                                     HttpServletResponse httpServletResponse,
@@ -36,7 +38,7 @@ public class SecurityFilter extends OncePerRequestFilter {
         String username = null;
 
         if (authorizationHeader != null) {
-            token = authorizationHeader.replace("Bearer","");
+            token = authorizationHeader.replace("Bearer", "");
             username = jwtUtil.extractUsername(token);
         }
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
@@ -53,12 +55,10 @@ public class SecurityFilter extends OncePerRequestFilter {
         }
         filterChain.doFilter(httpServletRequest, httpServletResponse);
 
-
-
     }
 
-    private boolean checkIfUserIsValid(String username) {
+    private boolean checkIfUserIsValid(String username) throws AccessDeniedException {
         User currentUser = securityService.loadUser(username);
-        return currentUser != null && currentUser.isEnabled();
+        return currentUser != null && currentUser.getEnabled();
     }
 }

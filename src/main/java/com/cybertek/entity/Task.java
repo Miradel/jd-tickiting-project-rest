@@ -1,8 +1,7 @@
 package com.cybertek.entity;
 
-import com.cybertek.dto.ProjectDTO;
-import com.cybertek.dto.UserDTO;
 import com.cybertek.enums.Status;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -17,8 +16,8 @@ import java.time.LocalDate;
 @Getter
 @Setter
 @Where(clause = "is_deleted=false")
+@JsonIgnoreProperties(value = {"hibernateLazyInitializer"},ignoreUnknown = true)
 public class Task extends BaseEntity {
-
     private String taskSubject;
     private String taskDetail;
 
